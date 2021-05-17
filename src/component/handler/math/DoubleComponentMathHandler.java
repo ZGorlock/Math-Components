@@ -6,7 +6,9 @@
 
 package component.handler.math;
 
-import component.Component;
+import java.util.function.IntFunction;
+
+import commons.math.MathUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +30,12 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
     /**
      * The precision to use in comparisons.
      */
-    public static final Double PRECISION = Component.STANDARD_PRECISION;
+    public static final Double PRECISION = DEFAULT_PRECISION.doubleValue();
+    
+    /**
+     * The number of significant figures of the precision.
+     */
+    public static final int SIGNIFICANT_FIGURES = DEFAULT_SIGNIFICANT_FIGURES;
     
     
     //Constructors
@@ -95,6 +102,16 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
     }
     
     /**
+     * Returns an array generator.
+     *
+     * @return An array generator.
+     */
+    @Override
+    public IntFunction<Double[]> arrayGenerator() {
+        return Double[]::new;
+    }
+    
+    /**
      * Defines the addition of one component with another.
      *
      * @param a The first component.
@@ -140,6 +157,9 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
      */
     @Override
     public Double divide(Double a, Double b) throws ArithmeticException {
+        if (isZero(b)) {
+            throw new ArithmeticException("Attempted to divide by zero");
+        }
         return a / b;
     }
     
@@ -162,11 +182,14 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
      * @param a The component.
      * @param n The root.
      * @return The result of the root operation of the component.
-     * @throws ArithmeticException When the result is imaginary.
+     * @throws ArithmeticException When the result is imaginary, or when the degree of the root is divided by zero.
      */
     @Override
     public Double root(Double a, Double n) throws ArithmeticException {
-        return Math.pow(a, (1.0 / n));
+        if (compare(a, zero()) < 0) {
+            throw new ArithmeticException("Result of root is imaginary");
+        }
+        return Math.pow(a, reciprocal(n));
     }
     
     /**
@@ -178,6 +201,9 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
      */
     @Override
     public Double sqrt(Double a) throws ArithmeticException {
+        if (compare(a, zero()) < 0) {
+            throw new ArithmeticException("Result of square root is imaginary");
+        }
         return Math.sqrt(a);
     }
     
@@ -190,10 +216,6 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
      */
     @Override
     public Double reciprocal(Double a) throws ArithmeticException {
-        if (isZero(a)) {
-            throw new ArithmeticException("Attempted to divide by zero");
-        }
-        
         return divide(one(), a);
     }
     
@@ -263,7 +285,39 @@ public class DoubleComponentMathHandler implements ComponentMathHandlerInterface
      */
     @Override
     public boolean isZero(Double a) {
-        return a == 0.0;
+        return clean(a) == 0.0;
+    }
+    
+    /**
+     * Cleans a component.
+     *
+     * @param a The component.
+     * @return The cleaned component.
+     */
+    @Override
+    public Double clean(Double a) {
+        return MathUtility.roundWithPrecision(a, SIGNIFICANT_FIGURES);
+    }
+    
+    
+    //Getters
+    
+    /**
+     * Returns the precision of the Component Math Handler.
+     *
+     * @return The precision of the Component Math Handler.
+     */
+    public Double getPrecision() {
+        return PRECISION;
+    }
+    
+    /**
+     * Returns the significant figures of the Component Math Handler.
+     *
+     * @return The significant figures of the Component Math Handler.
+     */
+    public int getSignificantFigures() {
+        return SIGNIFICANT_FIGURES;
     }
     
 }

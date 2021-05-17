@@ -1,5 +1,5 @@
 /*
- * File:    IntComponentMathHandler.java
+ * File:    RawComponentMathHandler.java
  * Package: component.handler.math
  * Author:  Zachary Gill
  */
@@ -8,20 +8,21 @@ package component.handler.math;
 
 import java.util.function.IntFunction;
 
+import commons.math.MathUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Defines the Component Math Handler for performing math operations for Int Components.
+ * Defines the Component Math Handler for performing math operations for Raw Components.
  */
-public class IntComponentMathHandler implements ComponentMathHandlerInterface<Integer> {
+public class RawComponentMathHandler implements ComponentMathHandlerInterface<Number> {
     
     //Logger
     
     /**
      * The logger.
      */
-    private static final Logger logger = LoggerFactory.getLogger(IntComponentMathHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(RawComponentMathHandler.class);
     
     
     //Constants
@@ -29,20 +30,20 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
     /**
      * The precision to use in comparisons.
      */
-    public static final Integer PRECISION = 1;
+    public static final Number PRECISION = DEFAULT_PRECISION;
     
     /**
      * The number of significant figures of the precision.
      */
-    public static final int SIGNIFICANT_FIGURES = 0;
+    public static final int SIGNIFICANT_FIGURES = DEFAULT_SIGNIFICANT_FIGURES;
     
     
     //Constructors
     
     /**
-     * The default no-argument constructor for a Integer Component Math Handler.
+     * The default no-argument constructor for a Raw Component Math Handler.
      */
-    public IntComponentMathHandler() {
+    public RawComponentMathHandler() {
     }
     
     
@@ -54,8 +55,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return Zero.
      */
     @Override
-    public Integer zero() {
-        return 0;
+    public Number zero() {
+        return 0.0;
     }
     
     /**
@@ -64,8 +65,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return One.
      */
     @Override
-    public Integer one() {
-        return 1;
+    public Number one() {
+        return 1.0;
     }
     
     /**
@@ -74,8 +75,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return Negative one.
      */
     @Override
-    public Integer negativeOne() {
-        return -1;
+    public Number negativeOne() {
+        return -1.0;
     }
     
     /**
@@ -85,8 +86,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The value of the specified number.
      */
     @Override
-    public Integer valueOf(Number n) {
-        return n.intValue();
+    public Number valueOf(Number n) {
+        return n;
     }
     
     /**
@@ -96,8 +97,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return An empty array of the specified length.
      */
     @Override
-    public Integer[] array(int length) {
-        return new Integer[length];
+    public Number[] array(int length) {
+        return new Number[length];
     }
     
     /**
@@ -106,8 +107,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return An array generator.
      */
     @Override
-    public IntFunction<Integer[]> arrayGenerator() {
-        return Integer[]::new;
+    public IntFunction<Number[]> arrayGenerator() {
+        return Number[]::new;
     }
     
     /**
@@ -118,8 +119,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The result of the addition of the components.
      */
     @Override
-    public Integer add(Integer a, Integer b) {
-        return a + b;
+    public Number add(Number a, Number b) {
+        return a.doubleValue() + b.doubleValue();
     }
     
     /**
@@ -130,8 +131,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The result of the subtraction of the components.
      */
     @Override
-    public Integer subtract(Integer a, Integer b) {
-        return a - b;
+    public Number subtract(Number a, Number b) {
+        return a.doubleValue() - b.doubleValue();
     }
     
     /**
@@ -142,8 +143,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The result of the multiplication of the components.
      */
     @Override
-    public Integer multiply(Integer a, Integer b) {
-        return a * b;
+    public Number multiply(Number a, Number b) {
+        return a.doubleValue() * b.doubleValue();
     }
     
     /**
@@ -155,11 +156,11 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @throws ArithmeticException When the divisor is zero.
      */
     @Override
-    public Integer divide(Integer a, Integer b) throws ArithmeticException {
+    public Number divide(Number a, Number b) throws ArithmeticException {
         if (isZero(b)) {
             throw new ArithmeticException("Attempted to divide by zero");
         }
-        return a / b;
+        return a.doubleValue() / b.doubleValue();
     }
     
     /**
@@ -171,8 +172,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @throws ArithmeticException When the result is imaginary.
      */
     @Override
-    public Integer power(Integer a, Integer n) throws ArithmeticException {
-        return (int) Math.pow(a, n);
+    public Number power(Number a, Number n) throws ArithmeticException {
+        return Math.pow(a.doubleValue(), n.doubleValue());
     }
     
     /**
@@ -184,11 +185,11 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @throws ArithmeticException When the result is imaginary, or when the degree of the root is divided by zero.
      */
     @Override
-    public Integer root(Integer a, Integer n) throws ArithmeticException {
+    public Number root(Number a, Number n) throws ArithmeticException {
         if (compare(a, zero()) < 0) {
             throw new ArithmeticException("Result of root is imaginary");
         }
-        return (int) Math.pow(a, reciprocal(n));
+        return Math.pow(a.doubleValue(), reciprocal(n).doubleValue());
     }
     
     /**
@@ -199,11 +200,11 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @throws ArithmeticException When the result is imaginary.
      */
     @Override
-    public Integer sqrt(Integer a) throws ArithmeticException {
+    public Number sqrt(Number a) throws ArithmeticException {
         if (compare(a, zero()) < 0) {
             throw new ArithmeticException("Result of square root is imaginary");
         }
-        return (int) Math.sqrt(a);
+        return Math.sqrt(a.doubleValue());
     }
     
     /**
@@ -214,7 +215,7 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @throws ArithmeticException When the component is zero.
      */
     @Override
-    public Integer reciprocal(Integer a) throws ArithmeticException {
+    public Number reciprocal(Number a) throws ArithmeticException {
         return divide(one(), a);
     }
     
@@ -225,8 +226,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The absolute value of the component.
      */
     @Override
-    public Integer abs(Integer a) {
-        return Math.abs(a);
+    public Number abs(Number a) {
+        return Math.abs(a.doubleValue());
     }
     
     /**
@@ -236,7 +237,7 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The negative value of the component.
      */
     @Override
-    public Integer negate(Integer a) {
+    public Number negate(Number a) {
         return multiply(a, negativeOne());
     }
     
@@ -247,8 +248,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The round value of the component.
      */
     @Override
-    public Integer round(Integer a) {
-        return a;
+    public Number round(Number a) {
+        return (Number) Math.round(a.doubleValue());
     }
     
     /**
@@ -259,8 +260,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The result of the comparison of the components.
      */
     @Override
-    public int compare(Integer a, Integer b) {
-        return a.compareTo(b);
+    public int compare(Number a, Number b) {
+        return Double.compare(a.doubleValue(), b.doubleValue());
     }
     
     /**
@@ -271,8 +272,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The result of the is equal operation of the components.
      */
     @Override
-    public boolean isEqual(Integer a, Integer b) {
-        return a.equals(b);
+    public boolean isEqual(Number a, Number b) {
+        return (compare(abs(subtract(b, a)), PRECISION) < 0);
     }
     
     /**
@@ -280,11 +281,11 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      *
      * @param a The component.
      * @return Whether the component is zero or not.
-     * @see #isEqual(Integer, Integer)
+     * @see #isEqual(Number, Number)
      */
     @Override
-    public boolean isZero(Integer a) {
-        return clean(a) == 0;
+    public boolean isZero(Number a) {
+        return clean(a).equals(zero());
     }
     
     /**
@@ -294,8 +295,8 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      * @return The cleaned component.
      */
     @Override
-    public Integer clean(Integer a) {
-        return a;
+    public Number clean(Number a) {
+        return MathUtility.roundWithPrecision(a.doubleValue(), SIGNIFICANT_FIGURES);
     }
     
     
@@ -306,7 +307,7 @@ public class IntComponentMathHandler implements ComponentMathHandlerInterface<In
      *
      * @return The precision of the Component Math Handler.
      */
-    public Integer getPrecision() {
+    public Number getPrecision() {
         return PRECISION;
     }
     

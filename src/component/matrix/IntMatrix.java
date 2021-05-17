@@ -9,9 +9,8 @@ package component.matrix;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import commons.list.ListUtility;
+import commons.math.MathUtility;
 import component.IntComponent;
 import component.vector.IntVector;
 import org.apache.commons.lang3.ArrayUtils;
@@ -41,10 +40,9 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
      */
     public IntMatrix(int... components) throws ArithmeticException {
         super();
-        setComponents(new Integer[components.length]);
-        System.arraycopy(ArrayUtils.toObject(components), 0, getComponents(), 0, getLength());
+        setComponents(ArrayUtils.toObject(components));
         
-        if (dimensionalityToLength() != components.length) {
+        if (!MathUtility.isSquare(components.length)) {
             throw new ArithmeticException(getErrorHandler().componentLengthNotSquareErrorMessage(ArrayUtils.toObject(components)));
         }
     }
@@ -69,7 +67,7 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
      * @see #IntMatrix(int...)
      */
     public IntMatrix(IntMatrix matrix) {
-        this(Arrays.stream(matrix.getComponents())
+        this(Arrays.stream(matrix.getRawComponents())
                 .mapToInt(e -> e).toArray());
     }
     
@@ -80,12 +78,12 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
      * @see #IntMatrix(int...)
      */
     public IntMatrix(Matrix matrix) {
-        this(Arrays.stream(matrix.getComponents())
+        this(Arrays.stream(matrix.getRawComponents())
                 .mapToInt(Double::intValue).toArray());
     }
     
     /**
-     * The constructor for an Integer Matrix from another Integer Matrix of a certain dimensionality.
+     * The constructor for an Integer Matrix of a certain dimensionality.
      *
      * @param dim The dimensionality of the Integer Matrix.
      * @see #IntMatrix(int...)
@@ -111,12 +109,11 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
      * Returns a string that represents the Integer Matrix.
      *
      * @return A string that represents the Integer Matrix.
+     * @see MatrixInterface#matrixString()
      */
     @Override
     public String toString() {
-        return ListUtility.split(ListUtility.toList(getComponents()), getDimensionality()).stream()
-                .map(e -> e.stream().map(Object::toString).collect(Collectors.joining(", ", "<", ">")))
-                .collect(Collectors.joining(", ", "[", "]"));
+        return MatrixInterface.super.matrixString();
     }
     
     /**
@@ -164,7 +161,7 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
      */
     @Override
     public IntMatrix createNewInstance(int dim) {
-        return createInstance(dim);
+        return createInstance(Math.max(dim, 0));
     }
     
     /**
@@ -228,16 +225,6 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
         return "Integer Matrix";
     }
     
-    /**
-     * Returns the plural name of the type of the Component.
-     *
-     * @return The plural name of the type of the Component.
-     */
-    @Override
-    public String getNamePlural() {
-        return "Integer Matrices";
-    }
-    
     
     //Functions
     
@@ -249,7 +236,7 @@ public class IntMatrix extends IntComponent<IntMatrix> implements MatrixInterfac
      * @see #IntMatrix(int)
      */
     public static IntMatrix createInstance(int dim) {
-        return new IntMatrix(dim);
+        return new IntMatrix(Math.max(dim, 0));
     }
     
     /**

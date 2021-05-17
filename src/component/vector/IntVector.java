@@ -9,7 +9,6 @@ package component.vector;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import commons.list.ArrayUtility;
 import commons.list.ListUtility;
@@ -40,8 +39,7 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      */
     public IntVector(int... components) {
         super();
-        setComponents(new Integer[components.length]);
-        System.arraycopy(ArrayUtils.toObject(components), 0, getComponents(), 0, getLength());
+        setComponents(ArrayUtils.toObject(components));
     }
     
     /**
@@ -63,7 +61,7 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      * @see #IntVector(int...)
      */
     public IntVector(IntVector vector) {
-        this(Arrays.stream(vector.getComponents())
+        this(Arrays.stream(vector.getRawComponents())
                 .mapToInt(e -> e).toArray());
     }
     
@@ -74,7 +72,7 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      * @see #IntVector(int...)
      */
     public IntVector(Vector vector) {
-        this(Arrays.stream(vector.getComponents())
+        this(Arrays.stream(vector.getRawComponents())
                 .mapToInt(Double::intValue).toArray());
     }
     
@@ -87,7 +85,7 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      */
     public IntVector(IntVector vector, int... components) {
         this(Arrays.stream(ArrayUtility.merge(
-                vector.getComponents(),
+                vector.getRawComponents(),
                 ArrayUtils.toObject(components), Integer.class)
         ).mapToInt(e -> e).toArray());
     }
@@ -101,18 +99,19 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      */
     public IntVector(Vector vector, int... components) {
         this(Arrays.stream(ArrayUtility.merge(
-                ArrayUtils.toObject(Arrays.stream(vector.getComponents()).mapToInt(Double::intValue).toArray()),
+                ArrayUtils.toObject(Arrays.stream(vector.getRawComponents()).mapToInt(Double::intValue).toArray()),
                 ArrayUtils.toObject(components), Integer.class)
         ).mapToInt(e -> e).toArray());
     }
     
     /**
-     * The constructor for an Integer Vector of a certain length.
+     * The constructor for an Integer Vector of a certain dimensionality.
      *
+     * @param dim The dimensionality of the Integer Vector.
      * @see #IntVector(int...)
      */
-    public IntVector(int length) {
-        this(Collections.nCopies(length, 0).stream()
+    public IntVector(int dim) {
+        this(Collections.nCopies(dim, 0).stream()
                 .mapToInt(e -> e).toArray());
     }
     
@@ -132,11 +131,11 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      * Returns a string that represents the Integer Vector.
      *
      * @return A string that represents the Integer Vector.
+     * @see VectorInterface#vectorString()
      */
     @Override
     public String toString() {
-        return Arrays.stream(getComponents()).map(String::valueOf)
-                .collect(Collectors.joining(", ", "<", ">"));
+        return VectorInterface.super.vectorString();
     }
     
     /**
@@ -172,7 +171,7 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      */
     @Override
     public IntVector createNewInstance(int dim) {
-        return createInstance(dim);
+        return createInstance(Math.max(dim, 0));
     }
     
     
@@ -199,7 +198,7 @@ public class IntVector extends IntComponent<IntVector> implements VectorInterfac
      * @see #IntVector(int)
      */
     public static IntVector createInstance(int dim) {
-        return new IntVector(dim);
+        return new IntVector(Math.max(dim, 0));
     }
     
     /**

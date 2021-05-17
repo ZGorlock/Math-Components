@@ -51,7 +51,7 @@ public class Vector2 extends Vector {
      * @see #Vector2(double, double)
      */
     public Vector2(Vector vector) {
-        this(vector.getX(), vector.getY());
+        this(vector.getRawX(), vector.getRawY());
     }
     
     /**
@@ -61,6 +61,16 @@ public class Vector2 extends Vector {
      */
     public Vector2() {
         super(DIMENSIONALITY);
+    }
+    
+    /**
+     * The protected constructor for a 2D Vector with a dimensionality argument.
+     *
+     * @param dim The dimensionality argument. *Ignored for Vector2*
+     * @see #Vector2()
+     */
+    protected Vector2(int dim) {
+        this();
     }
     
     
@@ -165,12 +175,32 @@ public class Vector2 extends Vector {
     /**
      * Creates a new 2D Vector instance.
      *
-     * @param dim *Ignored for Vector2*
      * @return The new Vector.
      * @see #Vector2()
      */
-    public static Vector2 createInstance(int dim) {
+    public static Vector2 createInstance() {
         return new Vector2();
+    }
+    
+    /**
+     * Creates a new 2D Vector instance.
+     *
+     * @param dim *Ignored for Vector2*
+     * @return The new Vector.
+     * @see #createInstance()
+     */
+    public static Vector2 createInstance(int dim) {
+        return createInstance();
+    }
+    
+    /**
+     * Creates a 2D identity Vector.
+     *
+     * @return The identity Vector.
+     * @see VectorInterface#identity(int, Class)
+     */
+    public static Vector2 identity() {
+        return VectorInterface.identity(DIMENSIONALITY, Vector2.class);
     }
     
     /**
@@ -178,10 +208,20 @@ public class Vector2 extends Vector {
      *
      * @param dim *Ignored for Vector2*
      * @return The identity Vector.
-     * @see VectorInterface#identity(int, Class)
+     * @see #identity()
      */
     public static Vector2 identity(int dim) {
-        return VectorInterface.identity(DIMENSIONALITY, Vector2.class);
+        return identity();
+    }
+    
+    /**
+     * Creates a 2D origin Vector.
+     *
+     * @return The origin Vector.
+     * @see VectorInterface#origin(int, Class)
+     */
+    public static Vector2 origin() {
+        return VectorInterface.origin(DIMENSIONALITY, Vector2.class);
     }
     
     /**
@@ -189,10 +229,10 @@ public class Vector2 extends Vector {
      *
      * @param dim *Ignored for Vector2*
      * @return The origin Vector.
-     * @see VectorInterface#origin(int, Class)
+     * @see #origin()
      */
     public static Vector2 origin(int dim) {
-        return VectorInterface.origin(DIMENSIONALITY, Vector2.class);
+        return origin();
     }
     
     /**
@@ -217,7 +257,7 @@ public class Vector2 extends Vector {
      */
     public static Double squareDifference(Vector vector) throws ArithmeticException {
         ComponentErrorHandlerProvider.assertDimensionalityEqual(vector, DIMENSIONALITY);
-        return Math.pow(vector.getComponents()[0], 2) - Math.pow(vector.getComponents()[1], 2);
+        return Math.pow(vector.getRawComponents()[0], 2) - Math.pow(vector.getRawComponents()[1], 2);
     }
     
     /**
@@ -232,8 +272,8 @@ public class Vector2 extends Vector {
         ComponentErrorHandlerProvider.assertDimensionalityEqual(vector1, DIMENSIONALITY);
         ComponentErrorHandlerProvider.assertDimensionalityEqual(vector2, DIMENSIONALITY);
         return new Vector2(
-                (vector1.getComponents()[0] * vector2.getComponents()[0]) - (vector1.getComponents()[1] * vector2.getComponents()[1]),
-                (vector1.getComponents()[0] * vector2.getComponents()[1]) + (vector1.getComponents()[1] * vector2.getComponents()[0])
+                (vector1.getRawComponents()[0] * vector2.getRawComponents()[0]) - (vector1.getRawComponents()[1] * vector2.getRawComponents()[1]),
+                (vector1.getRawComponents()[0] * vector2.getRawComponents()[1]) + (vector1.getRawComponents()[1] * vector2.getRawComponents()[0])
         );
     }
     
@@ -249,8 +289,8 @@ public class Vector2 extends Vector {
         ComponentErrorHandlerProvider.assertDimensionalityEqual(vector1, DIMENSIONALITY);
         ComponentErrorHandlerProvider.assertDimensionalityEqual(vector2, DIMENSIONALITY);
         return new Vector2(
-                (vector1.getComponents()[0] * vector2.getComponents()[0]) + (vector1.getComponents()[1] * vector2.getComponents()[1]),
-                (vector1.getComponents()[0] * vector2.getComponents()[1]) - (vector1.getComponents()[1] * vector2.getComponents()[0])
+                (vector1.getRawComponents()[0] * vector2.getRawComponents()[0]) + (vector1.getRawComponents()[1] * vector2.getRawComponents()[1]),
+                (vector1.getRawComponents()[0] * vector2.getRawComponents()[1]) - (vector1.getRawComponents()[1] * vector2.getRawComponents()[0])
         );
     }
     

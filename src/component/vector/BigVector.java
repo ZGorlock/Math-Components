@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import commons.list.ArrayUtility;
 import commons.list.ListUtility;
@@ -40,8 +39,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      */
     public BigVector(BigDecimal... components) {
         super();
-        setComponents(new BigDecimal[components.length]);
-        System.arraycopy(components, 0, getComponents(), 0, getLength());
+        setComponents(components);
     }
     
     /**
@@ -87,7 +85,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(BigDecimal...)
      */
     public BigVector(BigVector vector) {
-        this(vector.getComponents());
+        this(vector.getRawComponents());
         setMathContext(vector.getMathContext());
     }
     
@@ -98,8 +96,8 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(BigDecimal...)
      */
     public BigVector(Vector vector) {
-        this(Arrays.stream(vector.getComponents())
-                .map(BigDecimal::new).toArray(BigDecimal[]::new));
+        this(Arrays.stream(vector.getRawComponents())
+                .map(BigDecimal::valueOf).toArray(BigDecimal[]::new));
     }
     
     /**
@@ -111,7 +109,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      */
     public BigVector(BigVector vector, BigDecimal... components) {
         this(ArrayUtility.merge(
-                vector.getComponents(),
+                vector.getRawComponents(),
                 components, BigDecimal.class)
         );
         setMathContext(vector.getMathContext());
@@ -125,10 +123,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(BigDecimal...)
      */
     public BigVector(BigVector vector, double... components) {
-        this(ArrayUtility.merge(
-                vector.getComponents(),
-                Arrays.stream(components).mapToObj(BigDecimal::valueOf).toArray(BigDecimal[]::new), BigDecimal.class)
-        );
+        this(vector, Arrays.stream(components).mapToObj(BigDecimal::valueOf).toArray(BigDecimal[]::new));
     }
     
     /**
@@ -139,11 +134,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(BigDecimal...)
      */
     public BigVector(BigVector vector, String... components) {
-        this(ArrayUtility.merge(
-                vector.getComponents(),
-                Arrays.stream(components).map(BigDecimal::new).toArray(BigDecimal[]::new), BigDecimal.class)
-        );
-        setMathContext(vector.getMathContext());
+        this(vector, Arrays.stream(components).map(BigDecimal::new).toArray(BigDecimal[]::new));
     }
     
     /**
@@ -155,7 +146,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      */
     public BigVector(Vector vector, BigDecimal... components) {
         this(ArrayUtility.merge(
-                Arrays.stream(vector.getComponents()).map(BigDecimal::valueOf).toArray(BigDecimal[]::new),
+                Arrays.stream(vector.getRawComponents()).map(BigDecimal::valueOf).toArray(BigDecimal[]::new),
                 components, BigDecimal.class)
         );
     }
@@ -168,10 +159,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(BigDecimal...)
      */
     public BigVector(Vector vector, double... components) {
-        this(ArrayUtility.merge(
-                Arrays.stream(vector.getComponents()).map(BigDecimal::valueOf).toArray(BigDecimal[]::new),
-                Arrays.stream(components).mapToObj(BigDecimal::valueOf).toArray(BigDecimal[]::new), BigDecimal.class)
-        );
+        this(vector, Arrays.stream(components).mapToObj(BigDecimal::valueOf).toArray(BigDecimal[]::new));
     }
     
     /**
@@ -182,19 +170,17 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(BigDecimal...)
      */
     public BigVector(Vector vector, String... components) {
-        this(ArrayUtility.merge(
-                Arrays.stream(vector.getComponents()).map(BigDecimal::valueOf).toArray(BigDecimal[]::new),
-                Arrays.stream(components).map(BigDecimal::new).toArray(BigDecimal[]::new), BigDecimal.class)
-        );
+        this(vector, Arrays.stream(components).map(BigDecimal::new).toArray(BigDecimal[]::new));
     }
     
     /**
-     * The constructor for a Big Vector of a certain length.
+     * The constructor for a Big Vector of a certain dimensionality.
      *
+     * @param dim The dimensionality of the Big Vector.
      * @see #BigVector(BigDecimal...)
      */
-    public BigVector(int length) {
-        this(Collections.nCopies(length, BigDecimal.ZERO)
+    public BigVector(int dim) {
+        this(Collections.nCopies(dim, BigDecimal.ZERO)
                 .toArray(BigDecimal[]::new));
     }
     
@@ -214,11 +200,11 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * Returns a string that represents the Big Vector.
      *
      * @return A string that represents the Big Vector.
+     * @see VectorInterface#vectorString()
      */
     @Override
     public String toString() {
-        return Arrays.stream(getComponents()).map(BigDecimal::toPlainString)
-                .collect(Collectors.joining(", ", "<", ">"));
+        return VectorInterface.super.vectorString();
     }
     
     /**
@@ -254,7 +240,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      */
     @Override
     public BigVector createNewInstance(int dim) {
-        return createInstance(dim);
+        return createInstance(Math.max(dim, 0));
     }
     
     
@@ -281,7 +267,7 @@ public class BigVector extends BigComponent<BigVector> implements VectorInterfac
      * @see #BigVector(int)
      */
     public static BigVector createInstance(int dim) {
-        return new BigVector(dim);
+        return new BigVector(Math.max(dim, 0));
     }
     
     /**

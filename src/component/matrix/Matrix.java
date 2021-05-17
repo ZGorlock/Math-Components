@@ -9,9 +9,8 @@ package component.matrix;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import commons.list.ListUtility;
+import commons.math.MathUtility;
 import component.Component;
 import component.vector.Vector;
 import org.apache.commons.lang3.ArrayUtils;
@@ -41,10 +40,9 @@ public class Matrix extends Component<Matrix> implements MatrixInterface<Double,
      */
     public Matrix(double... components) throws ArithmeticException {
         super();
-        setComponents(new Double[components.length]);
-        System.arraycopy(ArrayUtils.toObject(components), 0, getComponents(), 0, getLength());
+        setComponents(ArrayUtils.toObject(components));
         
-        if (dimensionalityToLength() != components.length) {
+        if (!MathUtility.isSquare(components.length)) {
             throw new ArithmeticException(getErrorHandler().componentLengthNotSquareErrorMessage(ArrayUtils.toObject(components)));
         }
     }
@@ -69,12 +67,12 @@ public class Matrix extends Component<Matrix> implements MatrixInterface<Double,
      * @see #Matrix(double...)
      */
     public Matrix(Matrix matrix) {
-        this(Arrays.stream(matrix.getComponents())
+        this(Arrays.stream(matrix.getRawComponents())
                 .mapToDouble(e -> e).toArray());
     }
     
     /**
-     * The constructor for a Matrix from another Matrix of a certain dimensionality.
+     * The constructor for a Matrix of a certain dimensionality.
      *
      * @param dim The dimensionality of the Matrix.
      * @see #Matrix(double...)
@@ -100,12 +98,11 @@ public class Matrix extends Component<Matrix> implements MatrixInterface<Double,
      * Returns a string that represents the Matrix.
      *
      * @return A string that represents the Matrix.
+     * @see MatrixInterface#matrixString()
      */
     @Override
     public String toString() {
-        return ListUtility.split(ListUtility.toList(getComponents()), getDimensionality()).stream()
-                .map(e -> e.stream().map(Object::toString).collect(Collectors.joining(", ", "<", ">")))
-                .collect(Collectors.joining(", ", "[", "]"));
+        return MatrixInterface.super.matrixString();
     }
     
     /**
@@ -153,7 +150,7 @@ public class Matrix extends Component<Matrix> implements MatrixInterface<Double,
      */
     @Override
     public Matrix createNewInstance(int dim) {
-        return createInstance(dim);
+        return createInstance(Math.max(dim, 0));
     }
     
     /**
@@ -217,16 +214,6 @@ public class Matrix extends Component<Matrix> implements MatrixInterface<Double,
         return "Matrix";
     }
     
-    /**
-     * Returns the plural name of the type of the Component.
-     *
-     * @return The plural name of the type of the Component.
-     */
-    @Override
-    public String getNamePlural() {
-        return "Matrices";
-    }
-    
     
     //Functions
     
@@ -238,7 +225,7 @@ public class Matrix extends Component<Matrix> implements MatrixInterface<Double,
      * @see #Matrix(int)
      */
     public static Matrix createInstance(int dim) {
-        return new Matrix(dim);
+        return new Matrix(Math.max(dim, 0));
     }
     
     /**

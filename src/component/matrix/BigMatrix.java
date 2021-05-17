@@ -10,9 +10,8 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import commons.list.ListUtility;
+import commons.math.MathUtility;
 import component.BigComponent;
 import component.vector.BigVector;
 import org.slf4j.Logger;
@@ -41,10 +40,9 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
      */
     public BigMatrix(BigDecimal... components) throws ArithmeticException {
         super();
-        setComponents(new BigDecimal[components.length]);
-        System.arraycopy(components, 0, getComponents(), 0, getLength());
+        setComponents(components);
         
-        if (dimensionalityToLength() != components.length) {
+        if (!MathUtility.isSquare(components.length)) {
             throw new ArithmeticException(getErrorHandler().componentLengthNotSquareErrorMessage(components));
         }
     }
@@ -93,7 +91,7 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
      * @see #BigMatrix(BigDecimal...)
      */
     public BigMatrix(BigMatrix matrix) {
-        this(matrix.getComponents());
+        this(matrix.getRawComponents());
         setMathContext(matrix.getMathContext());
     }
     
@@ -104,12 +102,12 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
      * @see #BigMatrix(BigDecimal...)
      */
     public BigMatrix(Matrix matrix) {
-        this(Arrays.stream(matrix.getComponents())
+        this(Arrays.stream(matrix.getRawComponents())
                 .map(BigDecimal::new).toArray(BigDecimal[]::new));
     }
     
     /**
-     * The constructor for a Big Matrix from another Big Matrix of a certain dimensionality.
+     * The constructor for a Big Matrix of a certain dimensionality.
      *
      * @param dim The dimensionality of the Big Matrix.
      * @see #BigMatrix(BigDecimal...)
@@ -135,12 +133,11 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
      * Returns a string that represents the Big Matrix.
      *
      * @return A string that represents the Big Matrix.
+     * @see MatrixInterface#matrixString()
      */
     @Override
     public String toString() {
-        return ListUtility.split(ListUtility.toList(getComponents()), getDimensionality()).stream()
-                .map(e -> e.stream().map(BigDecimal::toPlainString).collect(Collectors.joining(", ", "<", ">")))
-                .collect(Collectors.joining(", ", "[", "]"));
+        return MatrixInterface.super.matrixString();
     }
     
     /**
@@ -188,7 +185,7 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
      */
     @Override
     public BigMatrix createNewInstance(int dim) {
-        return createInstance(dim);
+        return createInstance(Math.max(dim, 0));
     }
     
     /**
@@ -252,16 +249,6 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
         return "Big Matrix";
     }
     
-    /**
-     * Returns the plural name of the type of the Component.
-     *
-     * @return The plural name of the type of the Component.
-     */
-    @Override
-    public String getNamePlural() {
-        return "Big Matrices";
-    }
-    
     
     //Functions
     
@@ -273,7 +260,7 @@ public class BigMatrix extends BigComponent<BigMatrix> implements MatrixInterfac
      * @see #BigMatrix(int)
      */
     public static BigMatrix createInstance(int dim) {
-        return new BigMatrix(dim);
+        return new BigMatrix(Math.max(dim, 0));
     }
     
     /**

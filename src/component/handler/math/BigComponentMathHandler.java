@@ -8,9 +8,12 @@ package component.handler.math;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
+import java.util.function.IntFunction;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
-import component.BigComponent;
+import commons.math.BigMathUtility;
+import commons.math.MathUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +35,35 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
     /**
      * The precision to use in comparisons.
      */
-    public static final BigDecimal PRECISION = BigComponent.BIG_PRECISION;
+    public static final BigDecimal PRECISION = new BigDecimal("0.000000000000000000000000000000000001");
+    
+    /**
+     * The number of significant figures of the precision.
+     */
+    public static final int SIGNIFICANT_FIGURES = 36;
+    
+    /**
+     * The default value of the precision of a Big Component Math Context.
+     */
+    public static final int DEFAULT_MATH_PRECISION = BigMathUtility.DEFAULT_MATH_PRECISION;
+    
+    /**
+     * The default rounding mode of a Big Component Math Context.
+     */
+    public static final RoundingMode DEFAULT_ROUNDING_MODE = BigMathUtility.DEFAULT_ROUNDING_MODE;
+    
+    /**
+     * The Math Context for preforming intermediate calculations.
+     */
+    public static final MathContext CALCULATION_CONTEXT = new MathContext(BigMathUtility.PrecisionMode.MATH_PRECISION.getPrecision(), DEFAULT_ROUNDING_MODE);
     
     
     //Fields
     
     /**
-     * The MathContext to use when doing math.
+     * The Math Context to use when doing math.
      */
-    protected MathContext mathContext = new MathContext(BigComponent.DEFAULT_MATH_PRECISION, BigComponent.DEFAULT_ROUNDING_MODE);
+    protected MathContext mathContext = new MathContext(DEFAULT_MATH_PRECISION, DEFAULT_ROUNDING_MODE);
     
     
     //Constructors
@@ -71,7 +94,7 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal one() {
-        return BigDecimal.ZERO;
+        return BigDecimal.ONE;
     }
     
     /**
@@ -107,6 +130,16 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
     }
     
     /**
+     * Returns an array generator.
+     *
+     * @return An array generator.
+     */
+    @Override
+    public IntFunction<BigDecimal[]> arrayGenerator() {
+        return BigDecimal[]::new;
+    }
+    
+    /**
      * Defines the addition of one component with another.
      *
      * @param a The first component.
@@ -115,7 +148,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal add(BigDecimal a, BigDecimal b) {
-        return a.add(b, mathContext);
+        return MathUtility.roundWithPrecision(a.add(b),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -127,7 +161,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal subtract(BigDecimal a, BigDecimal b) {
-        return a.subtract(b, mathContext);
+        return MathUtility.roundWithPrecision(a.subtract(b),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -139,7 +174,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal multiply(BigDecimal a, BigDecimal b) {
-        return a.multiply(b, mathContext);
+        return MathUtility.roundWithPrecision(a.multiply(b),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -152,7 +188,12 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal divide(BigDecimal a, BigDecimal b) throws ArithmeticException {
-        return a.divide(b, mathContext);
+        if (isZero(b)) {
+            throw new ArithmeticException("Attempted to divide by zero");
+        }
+        
+        return MathUtility.roundWithPrecision(a.divide(b, CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -165,7 +206,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal power(BigDecimal a, BigDecimal n) throws ArithmeticException {
-        return BigDecimalMath.pow(a, n, mathContext);
+        return MathUtility.roundWithPrecision(BigDecimalMath.pow(a, n, CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -174,11 +216,19 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      * @param a The component.
      * @param n The root.
      * @return The result of the root operation of the component.
-     * @throws ArithmeticException When the result is imaginary.
+     * @throws ArithmeticException When the result is imaginary, or when the degree of the root is divided by zero.
      */
     @Override
     public BigDecimal root(BigDecimal a, BigDecimal n) throws ArithmeticException {
-        return BigDecimalMath.root(a, n, mathContext);
+        if (isZero(n)) {
+            throw new ArithmeticException("Attempted to divide by zero");
+        }
+        if (compare(a, zero()) < 0) {
+            throw new ArithmeticException("Result of root is imaginary");
+        }
+        
+        return MathUtility.roundWithPrecision(BigDecimalMath.root(a, n, CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -190,7 +240,12 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal sqrt(BigDecimal a) throws ArithmeticException {
-        return BigDecimalMath.sqrt(a, mathContext);
+        if (compare(a, zero()) < 0) {
+            throw new ArithmeticException("Result of square root is imaginary");
+        }
+        
+        return MathUtility.roundWithPrecision(BigDecimalMath.sqrt(a, CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -206,7 +261,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
             throw new ArithmeticException("Attempted to divide by zero");
         }
         
-        return BigDecimalMath.reciprocal(a, mathContext);
+        return MathUtility.roundWithPrecision(BigDecimalMath.reciprocal(a, CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -217,7 +273,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal abs(BigDecimal a) {
-        return a.abs(mathContext);
+        return MathUtility.roundWithPrecision(a.abs(CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -228,7 +285,8 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal negate(BigDecimal a) {
-        return a.negate(mathContext);
+        return MathUtility.roundWithPrecision(a.negate(CALCULATION_CONTEXT),
+                mathContext.getPrecision(), mathContext.getRoundingMode());
     }
     
     /**
@@ -239,7 +297,7 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public BigDecimal round(BigDecimal a) {
-        return BigDecimalMath.round(a, mathContext);
+        return a.setScale(0, mathContext.getRoundingMode());
     }
     
     /**
@@ -275,16 +333,57 @@ public class BigComponentMathHandler implements ComponentMathHandlerInterface<Bi
      */
     @Override
     public boolean isZero(BigDecimal a) {
-        return a.equals(zero());
+        return clean(a).equals(zero());
+    }
+    
+    /**
+     * Cleans a component.
+     *
+     * @param a The component.
+     * @return The cleaned component.
+     */
+    @Override
+    public BigDecimal clean(BigDecimal a) {
+        return MathUtility.roundWithPrecision(a, SIGNIFICANT_FIGURES);
+    }
+    
+    
+    //Getters
+    
+    /**
+     * Returns the precision of the Component Math Handler.
+     *
+     * @return The precision of the Component Math Handler.
+     */
+    public BigDecimal getPrecision() {
+        return PRECISION;
+    }
+    
+    /**
+     * Returns the significant figures of the Component Math Handler.
+     *
+     * @return The significant figures of the Component Math Handler.
+     */
+    public int getSignificantFigures() {
+        return SIGNIFICANT_FIGURES;
+    }
+    
+    /**
+     * Returns the Math Context to use when doing math.
+     *
+     * @return The Math Context to use when doing math.
+     */
+    public MathContext getMathContext() {
+        return mathContext;
     }
     
     
     //Setters
     
     /**
-     * Sets the MathContext to use when doing math.
+     * Sets the Math Context to use when doing math.
      *
-     * @param mathContext The MathContext to use when doing math.
+     * @param mathContext The Math Context to use when doing math.
      */
     public void setMathContext(MathContext mathContext) {
         this.mathContext = mathContext;

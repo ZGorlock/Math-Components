@@ -9,7 +9,9 @@ package component;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import commons.list.ArrayUtility;
 import component.handler.error.ComponentErrorHandlerInterface;
 import component.handler.error.ComponentErrorHandlerProvider;
 import component.handler.math.ComponentMathHandlerInterface;
@@ -32,14 +34,6 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
      * The logger.
      */
     private static final Logger logger = LoggerFactory.getLogger(BaseComponent.class);
-    
-    
-    //Constants
-    
-    /**
-     * The precision to use in comparisons.
-     */
-    public static final Number PRECISION = 0.000000000001;
     
     
     //Static Fields
@@ -120,16 +114,12 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         }
         BaseComponent other = (BaseComponent) o;
         
-        if (!dimensionalityEqual(other)) {
+        if (!dimensionalityEqual(other) || !lengthEqual(other)) {
             return false;
         }
         
-        for (int c = 0; c < getLength(); c++) {
-            if (getHandler().compare(getHandler().abs(getHandler().subtract(getComponents()[c], other.getComponents()[c])), getPrecision()) > 0) {
-                return false;
-            }
-        }
-        return true;
+        return IntStream.range(0, getLength()).boxed().allMatch(e ->
+                getHandler().isEqual(getRawComponents()[e], other.getRawComponents()[e]));
     }
     
     /**
@@ -198,7 +188,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
     @Override
     public I reverse() {
         I result = cloned();
-        ArrayUtils.reverse(result.getComponents());
+        ArrayUtils.reverse(result.getRawComponents());
         copyMeta(result);
         return result;
     }
@@ -217,7 +207,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         Number distance = getHandler().zero();
         for (int c = 0; c < getLength(); c++) {
             distance = getHandler().add(distance,
-                    getHandler().power(getHandler().subtract(other.getComponents()[c], getComponents()[c]), getHandler().valueOf(2)));
+                    getHandler().power(getHandler().subtract(other.getRawComponents()[c], getRawComponents()[c]), getHandler().valueOf(2)));
         }
         return (T) getHandler().sqrt(distance);
     }
@@ -250,12 +240,12 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            Number component = getComponents()[c];
+            Number component = getRawComponents()[c];
             for (I other : others) {
                 component = getHandler().add(component,
-                        other.getComponents()[c]);
+                        other.getRawComponents()[c]);
             }
-            result.getComponents()[c] = getHandler().divide(component, getHandler().valueOf(others.size() + 1));
+            result.getRawComponents()[c] = getHandler().divide(component, getHandler().valueOf(others.size() + 1));
         }
         copyMeta(result);
         return result;
@@ -284,7 +274,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         Number sum = getHandler().zero();
         for (int c = 0; c < getLength(); c++) {
             sum = getHandler().add(sum,
-                    getComponents()[c]);
+                    getRawComponents()[c]);
         }
         return (T) sum;
     }
@@ -299,7 +289,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         Number squareSum = getHandler().zero();
         for (int c = 0; c < getLength(); c++) {
             squareSum = getHandler().add(squareSum,
-                    getHandler().power(getComponents()[c], getHandler().valueOf(2)));
+                    getHandler().power(getRawComponents()[c], getHandler().valueOf(2)));
         }
         return (T) squareSum;
     }
@@ -317,8 +307,8 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            result.getComponents()[c] = getHandler().add(getComponents()[c],
-                    other.getComponents()[c]);
+            result.getRawComponents()[c] = getHandler().add(getRawComponents()[c],
+                    other.getRawComponents()[c]);
         }
         copyMeta(result);
         return result;
@@ -337,7 +327,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            result.getComponents()[c] = getHandler().subtract(getComponents()[c], other.getComponents()[c]);
+            result.getRawComponents()[c] = getHandler().subtract(getRawComponents()[c], other.getRawComponents()[c]);
         }
         copyMeta(result);
         return result;
@@ -356,7 +346,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            result.getComponents()[c] = getHandler().multiply(getComponents()[c], other.getComponents()[c]);
+            result.getRawComponents()[c] = getHandler().multiply(getRawComponents()[c], other.getRawComponents()[c]);
         }
         copyMeta(result);
         return result;
@@ -372,7 +362,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
     public I scale(Number scalar) {
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            result.getComponents()[c] = getHandler().multiply(getComponents()[c], getHandler().valueOf(scalar));
+            result.getRawComponents()[c] = getHandler().multiply(getRawComponents()[c], getHandler().valueOf(scalar));
         }
         copyMeta(result);
         return result;
@@ -388,13 +378,13 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
     @Override
     public I dividedBy(I other) throws ArithmeticException {
         ComponentErrorHandlerProvider.assertDimensionalitySame(this, other);
-        if (Arrays.stream(other.getComponents()).anyMatch(e -> getHandler().isZero(e))) {
-            throw new ArithmeticException("Attempted to divide by 0");
+        if (Arrays.stream(other.getRawComponents()).anyMatch(e -> getHandler().isZero(e))) {
+            throw new ArithmeticException("Attempted to divide by zero");
         }
         
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            result.getComponents()[c] = getHandler().divide(getComponents()[c], other.getComponents()[c]);
+            result.getRawComponents()[c] = getHandler().divide(getRawComponents()[c], other.getRawComponents()[c]);
         }
         copyMeta(result);
         return result;
@@ -409,7 +399,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
     public I round() {
         I result = emptyCopy();
         for (int c = 0; c < getLength(); c++) {
-            result.getComponents()[c] = getHandler().round(getComponents()[c]);
+            result.getRawComponents()[c] = getHandler().round(getRawComponents()[c]);
         }
         copyMeta(result);
         return result;
@@ -426,7 +416,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         ComponentErrorHandlerProvider.assertDimensionalitySame(this, to);
         
         for (int i = 0; i < getLength(); i++) {
-            to.getComponents()[i] = getComponents()[i];
+            to.getRawComponents()[i] = getRawComponents()[i];
         }
         copyMeta(to);
     }
@@ -455,7 +445,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         
         Number[] newComponents = getHandler().array(dimensionalityToLength(newDim));
         Arrays.fill(newComponents, getHandler().zero());
-        System.arraycopy(getComponents(), 0, newComponents, 0, Math.min(getLength(), newComponents.length));
+        System.arraycopy(getRawComponents(), 0, newComponents, 0, Math.min(getLength(), newComponents.length));
         setComponents((T[]) newComponents);
     }
     
@@ -467,7 +457,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
      */
     @Override
     public int dimensionalityToLength(int dim) {
-        return dim;
+        return Math.max(dim, 0);
     }
     
     /**
@@ -489,7 +479,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
      */
     @Override
     public int lengthToDimensionality(int length) {
-        return length;
+        return Math.max(length, 0);
     }
     
     /**
@@ -515,24 +505,50 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
     //Getters
     
     /**
+     * Returns the raw components that define the Component.
+     *
+     * @return The raw components that define the Component.
+     */
+    @Override
+    public abstract Number[] getRawComponents();
+    
+    /**
      * Returns the components that define the Component.
      *
      * @return The components that define the Component.
+     * @see #getRawComponents()
      */
     @Override
-    public abstract Number[] getComponents();
+    public final T[] getComponents() {
+        return (T[]) Arrays.stream(getRawComponents())
+                .map(e -> getHandler().clean(e))
+                .toArray(getHandler().arrayGenerator());
+    }
     
     /**
-     * Returns a components of the Component.
+     * Returns a raw component of the Component.
      *
      * @param index The index of the component.
-     * @return The components of the Component at the specified index.
+     * @return The raw component of the Component at the specified index.
      * @throws IndexOutOfBoundsException When the Component does not contain a component at the specified index.
      */
     @Override
-    public T get(int index) throws IndexOutOfBoundsException {
+    public T getRaw(int index) throws IndexOutOfBoundsException {
         ComponentErrorHandlerProvider.assertIndexInBounds(this, index);
-        return (T) getComponents()[index];
+        return (T) getRawComponents()[index];
+    }
+    
+    /**
+     * Returns a component of the Component.
+     *
+     * @param index The index of the component.
+     * @return The component of the Component at the specified index.
+     * @throws IndexOutOfBoundsException When the Component does not contain a component at the specified index.
+     * @see #getRaw(int)
+     */
+    @Override
+    public T get(int index) throws IndexOutOfBoundsException {
+        return (T) getHandler().clean(getRaw(index));
     }
     
     /**
@@ -552,7 +568,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
      */
     @Override
     public final int getLength() {
-        return getComponents().length;
+        return getRawComponents().length;
     }
     
     /**
@@ -602,17 +618,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
      */
     @Override
     public String getName() {
-        return "Component";
-    }
-    
-    /**
-     * Returns the plural name of the type of the Component.
-     *
-     * @return The plural name of the type of the Component.
-     */
-    @Override
-    public String getNamePlural() {
-        return getName() + 's';
+        return "Base Component";
     }
     
     /**
@@ -622,7 +628,7 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
      */
     @Override
     public Number getPrecision() {
-        return PRECISION;
+        return getHandler().getPrecision();
     }
     
     /**
@@ -649,6 +655,9 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
         if ((components != null) && (!isResizeable() && (newComponents.length != getLength()))) {
             throw new IndexOutOfBoundsException(getErrorHandler().componentLengthNotEqualErrorMessage(newComponents, getLength()));
         }
+        if (ArrayUtility.anyNull(newComponents)) {
+            throw new NullPointerException();
+        }
         
         components = newComponents;
         calculateDimensionality();
@@ -664,7 +673,10 @@ public abstract class BaseComponent<T extends Number, I extends BaseComponent<?,
     @Override
     public void set(int index, T value) throws IndexOutOfBoundsException {
         ComponentErrorHandlerProvider.assertIndexInBounds(this, index);
-        getComponents()[index] = value;
+        
+        if (value != null) {
+            getRawComponents()[index] = value;
+        }
     }
     
     
