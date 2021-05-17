@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -989,6 +990,60 @@ public final class StringUtility {
         }
         
         return String.valueOf(str).repeat(num);
+    }
+    
+    /**
+     * Returns '[aA] {str}' or '[aA]n {str}' depending on the string.
+     *
+     * @param str       The string to justify.
+     * @param uppercase Whether or not to capitalize the first letter.
+     * @return '[aA] {str}' or '[aA]n {str}'.
+     */
+    public static String justifyAOrAn(String str, boolean uppercase) {
+        if (str.isBlank()) {
+            return "";
+        }
+        
+        return (uppercase ? 'A' : 'a') + (isVowel(str.charAt(0)) ? "n" : "") + ' ' + str;
+    }
+    
+    /**
+     * Returns 'a {str}' or 'an {str}' depending on the string.
+     *
+     * @param str The string to justify.
+     * @return 'a {str}' or 'an {str}'.
+     * @see #justifyAOrAn(String, boolean)
+     */
+    public static String justifyAOrAn(String str) {
+        return justifyAOrAn(str, false);
+    }
+    
+    /**
+     * Returns '{quantity} {unit}' or '{quantity} {unit}s' depending on the quantity.
+     *
+     * @param quantity The quantity.
+     * @param unit     The name of the unit.
+     * @return '{quantity} {unit}' or '{quantity} {unit}s' depending on the quantity
+     */
+    public static String justifyQuantity(int quantity, String unit) {
+        if (unit.isBlank()) {
+            return String.valueOf(quantity);
+        }
+        
+        return String.valueOf(quantity) + ' ' + unit + ((quantity != 1) ? "s" : "");
+    }
+    
+    /**
+     * Returns a string representing a method.
+     *
+     * @param clazz           The class that has the method.
+     * @param methodName      The name of the method.
+     * @param argumentClasses The classes of the arguments of the method.
+     * @return The method string.
+     */
+    public static String methodString(Class<?> clazz, String methodName, Class<?>... argumentClasses) {
+        return clazz.getSimpleName() + "::" + methodName +
+                '(' + Arrays.stream(argumentClasses).sequential().map(Class::getSimpleName).collect(Collectors.joining(", ")) + ')';
     }
     
     /**
