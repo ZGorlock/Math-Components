@@ -32,6 +32,9 @@
         <slf4j.version>1.7.30</slf4j.version>
         <logback.version>1.2.3</logback.version>
         
+        <!-- UNIT TESTS -->
+        <powermock.version>2.0.5</powermock.version>
+        
         <!-- MATH -->
         <big-math.version>2.1.0</big-math.version>
     </properties>
@@ -76,6 +79,18 @@
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        
+        <!-- UNIT TESTS -->
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>${powermock.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito2</artifactId>
+            <version>${powermock.version}</version>
         </dependency>
         
         <!-- MATH -->
